@@ -1,25 +1,19 @@
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: sock-shop
----
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: cart-db
+  name: carts-db
   labels:
-    name: cart-db
+    name: carts-db
   namespace: sock-shop
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        name: cart-db
+        name: carts-db
     spec:
       containers:
-      - name: cart-db
+      - name: carts-db
         image: mongo
         ports:
         - name: mongo
@@ -40,13 +34,15 @@ spec:
         - name: tmp-volume
           emptyDir:
             medium: Memory
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: cart-db
+  name: carts-db
   labels:
-    name: cart-db
+    name: carts-db
   namespace: sock-shop
 spec:
   ports:
@@ -54,27 +50,32 @@ spec:
   - port: 27017
     targetPort: 27017
   selector:
-    name: cart-db
+    name: carts-db
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: cart
+  name: carts
   labels:
-    name: cart
+    name: carts
   namespace: sock-shop
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        name: cart
+        name: carts
     spec:
       containers:
-      - name: cart
-        image: weaveworksdemos/cart:0.4.0
+      - name: carts
+        image: weaveworksdemos/carts:0.4.8
         ports:
-        - containerPort: 80
+         - containerPort: 80
+        env:
+         - name: ZIPKIN
+           value: zipkin.jaeger.svc.cluster.local
+         - name: JAVA_OPTS
+           value: -Xms64m -Xmx128m -XX:PermSize=32m -XX:MaxPermSize=64m -XX:+UseG1GC -Djava.security.egd=file:/dev/urandom
         securityContext:
           runAsNonRoot: true
           runAsUser: 10001
@@ -91,15 +92,15 @@ spec:
         - name: tmp-volume
           emptyDir:
             medium: Memory
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: cart
+  name: carts
   labels:
-    name: cart
-  annotations:
-    prometheus.io/path: "/prometheus"
+    name: carts
   namespace: sock-shop
 spec:
   ports:
@@ -107,7 +108,7 @@ spec:
   - port: 80
     targetPort: 80
   selector:
-    name: cart
+    name: carts
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -134,6 +135,8 @@ spec:
         ports:
         - name: mysql
           containerPort: 3306
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -166,10 +169,7 @@ spec:
     spec:
       containers:
       - name: catalogue
-        image: weaveworksdemos/catalogue:0.3.0
-        env:
-          - name: ZIPKIN
-            value: http://zipkin:9411/api/v1/spans
+        image: weaveworksdemos/catalogue:0.3.5
         ports:
         - containerPort: 80
         securityContext:
@@ -181,6 +181,8 @@ spec:
             add:
               - NET_BIND_SERVICE
           readOnlyRootFilesystem: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -211,7 +213,7 @@ spec:
     spec:
       containers:
       - name: front-end
-        image: weaveworksdemos/front-end:0.3.1
+        image: weaveworksdemos/front-end:0.3.12
         resources:
           requests:
             cpu: 100m
@@ -225,6 +227,8 @@ spec:
             drop:
               - all
           readOnlyRootFilesystem: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -278,6 +282,8 @@ spec:
         - name: tmp-volume
           emptyDir:
             medium: Memory
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -310,7 +316,12 @@ spec:
     spec:
       containers:
       - name: orders
-        image: weaveworksdemos/orders:0.4.2
+        image: weaveworksdemos/orders:0.4.7
+        env:
+         - name: ZIPKIN
+           value: zipkin.jaeger.svc.cluster.local
+         - name: JAVA_OPTS
+           value: -Xms64m -Xmx128m -XX:PermSize=32m -XX:MaxPermSize=64m -XX:+UseG1GC -Djava.security.egd=file:/dev/urandom
         ports:
         - containerPort: 80
         securityContext:
@@ -329,6 +340,8 @@ spec:
         - name: tmp-volume
           emptyDir:
             medium: Memory
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -336,8 +349,6 @@ metadata:
   name: orders
   labels:
     name: orders
-  annotations:
-    prometheus.io/path: "/prometheus"
   namespace: sock-shop
 spec:
   ports:
@@ -363,12 +374,9 @@ spec:
     spec:
       containers:
       - name: payment
-        image: weaveworksdemos/payment:0.4.1
+        image: weaveworksdemos/payment:0.4.3
         ports:
         - containerPort: 80
-        env:
-        - name: ZIPKIN
-          value: http://zipkin:9411/api/v1/spans
         securityContext:
           runAsNonRoot: true
           runAsUser: 10001
@@ -378,6 +386,8 @@ spec:
             add:
               - NET_BIND_SERVICE
           readOnlyRootFilesystem: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -410,9 +420,11 @@ spec:
     spec:
       containers:
       - name: queue-master
-        image: weaveworksdemos/queue-master:0.3.0
+        image: weaveworksdemos/queue-master:0.3.1
         ports:
         - containerPort: 80
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -447,7 +459,7 @@ spec:
     spec:
       containers:
       - name: rabbitmq
-        image: rabbitmq:3
+        image: rabbitmq:3.6.8
         ports:
         - containerPort: 5672
         securityContext:
@@ -460,6 +472,8 @@ spec:
               - SETUID
               - DAC_OVERRIDE
           readOnlyRootFilesystem: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -492,7 +506,12 @@ spec:
     spec:
       containers:
       - name: shipping
-        image: weaveworksdemos/shipping:0.4.0
+        image: weaveworksdemos/shipping:0.4.8
+        env:
+         - name: ZIPKIN
+           value: zipkin.jaeger.svc.cluster.local
+         - name: JAVA_OPTS
+           value: -Xms64m -Xmx128m -XX:PermSize=32m -XX:MaxPermSize=64m -XX:+UseG1GC -Djava.security.egd=file:/dev/urandom
         ports:
         - containerPort: 80
         securityContext:
@@ -511,7 +530,8 @@ spec:
         - name: tmp-volume
           emptyDir:
             medium: Memory
-
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -519,8 +539,6 @@ metadata:
   name: shipping
   labels:
     name: shipping
-  annotations:
-    prometheus.io/path: "/prometheus"
   namespace: sock-shop
 spec:
   ports:
@@ -566,6 +584,8 @@ spec:
         - name: tmp-volume
           emptyDir:
             medium: Memory
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -598,14 +618,12 @@ spec:
     spec:
       containers:
       - name: user
-        image: weaveworksdemos/user:0.4.0
+        image: weaveworksdemos/user:0.4.7
         ports:
         - containerPort: 80
         env:
         - name: MONGO_HOST
           value: user-db:27017
-        - name: ZIPKIN
-          value: http://zipkin:9411/api/v1/spans
         securityContext:
           runAsNonRoot: true
           runAsUser: 10001
@@ -615,6 +633,8 @@ spec:
             add:
               - NET_BIND_SERVICE
           readOnlyRootFilesystem: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -630,115 +650,3 @@ spec:
     targetPort: 80
   selector:
     name: user
-
-
-
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: zipkin
-  labels:
-    name: zipkin
-  namespace: sock-shop
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        name: zipkin
-    spec:
-      containers:
-      - name: zipkin
-        image: openzipkin/zipkin
-        ports:
-        - containerPort: 9411
-        env:
-        - name: STORAGE_TYPE
-          value: mysql
-        - name: MYSQL_HOST
-          value: zipkin-mysql
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: zipkin
-  labels:
-    name: zipkin
-  namespace: sock-shop
-spec:
-  type: NodePort
-  ports:
-    # the port that this service should serve on
-  - port: 9411
-    targetPort: 9411
-    nodePort: 30002
-  selector:
-    name: zipkin
-
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: zipkin-mysql
-  labels:
-    name: zipkin-mysql
-  namespace: sock-shop
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        name: zipkin-mysql
-    spec:
-      containers:
-      - name: zipkin-mysql
-        image: openzipkin/zipkin-mysql:1.20.0
-        ports:
-        - name: mysql
-          containerPort: 3306
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: zipkin-mysql
-  labels:
-    name: zipkin-mysql
-  namespace: sock-shop
-spec:
-  ports:
-    # the port that this service should serve on
-  - port: 3306
-    targetPort: 3306
-  selector:
-    name: zipkin-mysql
-
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: zipkin-cron
-  labels:
-    name: zipkin-cron
-  namespace: sock-shop
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        name: zipkin-cron
-    spec:
-      containers:
-      - name: zipkin-cron
-        image: openzipkin/zipkin-dependencies:1.4.0
-        env:
-        - name: STORAGE_TYPE
-          value: mysql
-        - name: MYSQL_HOST
-          value: zipkin-mysql
-        - name: MYSQL_USER
-          value: zipkin
-        - name: MYSQL_PASS
-          value: zipkin
-        command: ["crond"]
-        args: ["-f"]

@@ -217,8 +217,8 @@ job "weavedemo" {
     } # - end db - #
   } # - end catalogue - #
 
-  # - cart - #
-  group "cart" {
+  # - carts - #
+  group "carts" {
     count = 1
 
     restart {
@@ -229,20 +229,24 @@ job "weavedemo" {
     }
 
     # - app - #
-    task "cart" {
+    task "carts" {
       driver = "docker"
 
       config {
-        image = "weaveworksdemos/cart"
-        hostname = "cart.weave.local"
+        image = "weaveworksdemos/carts"
+        hostname = "carts.weave.local"
         network_mode = "internal"
         dns_servers = ["172.17.0.1"]
         dns_search_domains = ["weave.local."]
       }
 
       service {
-        name = "${TASKGROUP}-cart"
-        tags = ["cart"]
+        name = "${TASKGROUP}-carts"
+        tags = ["carts"]
+      }
+      
+      env {
+        JAVA_OPTS = "-Xms64m -Xmx128m -XX:PermSize=32m -XX:MaxPermSize=64m -XX:+UseG1GC -Djava.security.egd=file:/dev/urandom"
       }
 
       resources {
@@ -260,13 +264,13 @@ job "weavedemo" {
 
       config {
         image = "mongo"
-        hostname = "cart-db.weave.local"
+        hostname = "carts-db.weave.local"
         network_mode = "internal"
       }
 
       service {
         name = "${TASKGROUP}-cartdb"
-        tags = ["db", "cart", "cartdb"]
+        tags = ["db", "carts", "cartdb"]
       }
 
       resources {
@@ -277,7 +281,7 @@ job "weavedemo" {
         }
       }
     } # - end db - #
-  } # - end cart - #
+  } # - end carts - #
 
   # - shipping - #
   group "shipping" {
@@ -305,6 +309,10 @@ job "weavedemo" {
       service {
         name = "${TASKGROUP}-shipping"
         tags = ["shipping"]
+      }
+
+      env {
+        JAVA_OPTS = "-Xms64m -Xmx128m -XX:PermSize=32m -XX:MaxPermSize=64m -XX:+UseG1GC -Djava.security.egd=file:/dev/urandom"
       }
 
       resources {
@@ -382,6 +390,10 @@ job "weavedemo" {
       service {
         name = "${TASKGROUP}-orders"
         tags = ["orders"]
+      }
+
+      env {
+        JAVA_OPTS = "-Xms64m -Xmx128m -XX:PermSize=32m -XX:MaxPermSize=64m -XX:+UseG1GC -Djava.security.egd=file:/dev/urandom"
       }
 
       resources {
@@ -469,7 +481,7 @@ job "weavedemo" {
       driver = "docker"
 
       config {
-        image = "rabbitmq:3"
+        image = "rabbitmq:3.6.8"
         hostname = "rabbitmq.weave.local"
         network_mode = "backoffice"
       }

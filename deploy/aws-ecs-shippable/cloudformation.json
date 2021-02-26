@@ -397,7 +397,7 @@
           {
             "Essential": true,
             "Image": "mongo",
-            "Name": "cart-db",
+            "Name": "carts-db",
             "Memory": 256
           }
         ],
@@ -727,7 +727,7 @@
         "ContainerDefinitions": [
           {
             "Essential": true,
-            "Image": "rabbitmq:3",
+            "Image": "rabbitmq:3.6.8",
             "Name": "rabbitmq",
             "Memory": 256
           }

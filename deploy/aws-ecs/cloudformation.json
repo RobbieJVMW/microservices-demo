@@ -214,14 +214,14 @@
         "EcsCluster": {
             "Type": "AWS::ECS::Cluster"
         },
-        "CartDBTask": {
+        "CartsDBTask": {
             "Condition": "DoDeployExampleApp",
             "Type": "AWS::ECS::TaskDefinition",
             "Properties": {
                 "ContainerDefinitions": [{
                     "Essential": true,
                     "Image": "mongo",
-                    "Name": "cart-db",
+                    "Name": "carts-db",
  		    "LogConfiguration": {
                         "LogDriver": "awslogs",
                         "Options": {
@@ -229,7 +229,7 @@
                             "awslogs-region": {
 			        "Ref": "AWS::Region"
                             },
-                            "awslogs-stream-prefix": "cart-db"
+                            "awslogs-stream-prefix": "carts-db"
                          }
                     },
                     "Memory": 128
@@ -237,7 +237,7 @@
                 "Volumes": []
             }
         },
-        "CartDBService": {
+        "CartsDBService": {
             "Condition": "DoDeployExampleApp",
             "Type": "AWS::ECS::Service",
             "Properties": {
@@ -246,18 +246,18 @@
                 },
                 "DesiredCount": 1,
                 "TaskDefinition": {
-                    "Ref": "CartDBTask"
+                    "Ref": "CartsDBTask"
                 }
             }
         },
-        "CartTask": {
+        "CartsTask": {
             "Condition": "DoDeployExampleApp",
             "Type": "AWS::ECS::TaskDefinition",
             "Properties": {
                 "ContainerDefinitions": [{
                     "Essential": true,
-                    "Image": "weaveworksdemos/cart",
-                    "Name": "cart",
+                    "Image": "weaveworksdemos/carts",
+                    "Name": "carts",
  		    "LogConfiguration": {
                         "LogDriver": "awslogs",
                         "Options": {
@@ -265,7 +265,7 @@
                             "awslogs-region": {
 			        "Ref": "AWS::Region"
                             },
-                            "awslogs-stream-prefix": "cart"
+                            "awslogs-stream-prefix": "carts"
                          }
                     },
                     "Memory": 1024
@@ -273,7 +273,7 @@
                 "Volumes": []
             }
         },
-        "CartService": {
+        "CartsService": {
             "Condition": "DoDeployExampleApp",
             "Type": "AWS::ECS::Service",
             "Properties": {
@@ -282,7 +282,7 @@
                 },
                 "DesiredCount": 3,
                 "TaskDefinition": {
-                    "Ref": "CartTask"
+                    "Ref": "CartsTask"
                 }
             }
         },
@@ -363,12 +363,52 @@
                          }
                     },
                     "Memory": 256,
+                    "Environment": [{
+                        "Name": "SESSION_REDIS",
+                        "Value": "true"
+                    }],
                     "PortMappings": [{
                         "HostPort": 80,
                         "ContainerPort": 8079
                     }]
                 }],
                 "Volumes": []
+            }
+        },
+        "SessionDBTask": {
+            "Condition": "DoDeployExampleApp",
+            "Type": "AWS::ECS::TaskDefinition",
+            "Properties": {
+                "ContainerDefinitions": [{
+                    "Essential": true,
+                    "Image": "redis:alpine",
+                    "Name": "session-db",
+                    "LogConfiguration": {
+                        "LogDriver": "awslogs",
+                        "Options": {
+                            "awslogs-group": { "Ref": "AWS::StackName"  },
+                            "awslogs-region": {
+			        "Ref": "AWS::Region"
+                            },
+                            "awslogs-stream-prefix": "session-db"
+                         }
+                    },
+                    "Memory": 256
+                }],
+                "Volumes": []
+            }
+        },
+        "SessionDBService": {
+            "Condition": "DoDeployExampleApp",
+            "Type": "AWS::ECS::Service",
+            "Properties": {
+                "Cluster": {
+                    "Ref": "EcsCluster"
+                },
+                "DesiredCount": 1,
+                "TaskDefinition": {
+                    "Ref": "SessionDBTask"
+                }
             }
         },
         "FrontEndService": {
@@ -378,9 +418,7 @@
                 "Cluster": {
                     "Ref": "EcsCluster"
                 },
-                "DesiredCount": {
-                    "Ref": "Scale"
-                },
+                "DesiredCount": 3,
                 "TaskDefinition": {
                     "Ref": "FrontEndTask"
                 }
@@ -394,7 +432,7 @@
                     "Essential": true,
                     "Image": "weaveworksdemos/user",
                     "Name": "user",
- 		    "LogConfiguration": {
+                    "LogConfiguration": {
                         "LogDriver": "awslogs",
                         "Options": {
                             "awslogs-group": { "Ref": "AWS::StackName"  },
@@ -462,61 +500,39 @@
                 }
             }
         },
-        "OrdersDBTask": {
-            "Condition": "DoDeployExampleApp",
-            "Type": "AWS::ECS::TaskDefinition",
-            "Properties": {
-                "ContainerDefinitions": [{
-                    "Essential": true,
-                    "Image": "mongo",
-                    "Name": "orders-db",
- 		    "LogConfiguration": {
-                        "LogDriver": "awslogs",
-                        "Options": {
-                            "awslogs-group": { "Ref": "AWS::StackName"  },
-                            "awslogs-region": {
-			        "Ref": "AWS::Region"
-                            },
-                            "awslogs-stream-prefix": "orders-db"
-                         }
-                    },
-                    "Memory": 128
-                }],
-                "Volumes": []
-            }
-        },
-        "OrdersDBService": {
-            "Condition": "DoDeployExampleApp",
-            "Type": "AWS::ECS::Service",
-            "Properties": {
-                "Cluster": {
-                    "Ref": "EcsCluster"
-                },
-                "DesiredCount": 1,
-                "TaskDefinition": {
-                    "Ref": "OrdersDBTask"
-                }
-            }
-        },
         "OrdersTask": {
             "Condition": "DoDeployExampleApp",
             "Type": "AWS::ECS::TaskDefinition",
             "Properties": {
                 "ContainerDefinitions": [{
                     "Essential": true,
-                    "Image": "weaveworksdemos/orders",
+                    "Image": "weaveworksdemos/orders-aws",
                     "Name": "orders",
- 		    "LogConfiguration": {
+                    "LogConfiguration": {
                         "LogDriver": "awslogs",
                         "Options": {
                             "awslogs-group": { "Ref": "AWS::StackName"  },
                             "awslogs-region": {
-			        "Ref": "AWS::Region"
+                                "Ref": "AWS::Region"
                             },
                             "awslogs-stream-prefix": "orders"
                          }
                     },
-                    "Memory": 1024
+                    "Memory": 1024,
+                    "Environment": [{
+                        "Name": "AWS_DYNAMODB_ENDPOINT",
+                        "Value": {
+                            "Fn::Join": [
+                                "", [
+                                    "dynamodb.",
+                                    {
+                                        "Ref": "AWS::Region"
+                                    },
+                                    ".amazonaws.com"
+                                ]
+                            ]
+                        }
+                    }]
                 }],
                 "Volumes": []
             }
@@ -625,7 +641,7 @@
             "Properties": {
                 "ContainerDefinitions": [{
                     "Essential": true,
-                    "Image": "rabbitmq:3",
+                    "Image": "rabbitmq:3.6.8",
                     "Name": "rabbitmq",
  		    "LogConfiguration": {
                         "LogDriver": "awslogs",
@@ -1095,6 +1111,17 @@
                                 "logs:CreateLogStream",
                                 "logs:PutLogEvents",
                                 "logs:DescribeLogStreams",
+                                "dynamodb:BatchGetItem",
+                                "dynamodb:BatchWriteItem",
+                                "dynamodb:GetItem",
+                                "dynamodb:PutItem",
+                                "dynamodb:GetRecords",
+                                "dynamodb:DeleteItem",
+                                "dynamodb:ListTables",
+                                "dynamodb:Query",
+                                "dynamodb:Scan",
+                                "dynamodb:UpdateItem",
+                                "dynamodb:DescribeTable",
                                 "autoscaling:DescribeAutoScalingInstances"
                             ],
                             "Resource": [
@@ -1376,6 +1403,36 @@
                 }]
             }
         },
+        "OrdersDynamoDB": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "customerId",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "id",
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "customerId",
+                        "KeyType": "RANGE"
+                    }
+                ],
+                "ProvisionedThroughput" : {
+                    "ReadCapacityUnits" : "5",
+                    "WriteCapacityUnits" : "5"
+                },
+                "TableName": "orders"
+            }
+        },
         "CatalogueRDS": {
             "Type": "AWS::RDS::DBInstance",
             "Properties": {
@@ -1524,12 +1581,7 @@
                 "Name": "Scope-Target-Group",
                 "Port": 4040,
                 "Protocol": "HTTP",
-                "VpcId": { "Ref" : "Vpc" },
-                "TargetGroupAttributes" : [
-                    { "Key" : "stickiness.type", "Value" : "lb_cookie" },
-                    { "Key" : "stickiness.enabled", "Value" : "true" },
-                    { "Key" : "stickiness.lb_cookie.duration_seconds", "Value" : "1860" }
-                ]
+                "VpcId": { "Ref" : "Vpc" }
             },
             "DependsOn": [ "EcsScopeApplicationLoadBalancing" ]
         },

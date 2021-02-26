@@ -15,19 +15,16 @@ spec:
     spec:
       containers:
       - name: payment
-        image: weaveworksdemos/payment:0.4.1
+        image: weaveworksdemos/payment:0.4.3
         resources:
           limits:
             cpu: 100m
             memory: 100Mi
           requests:
-            cpu: 100m
+            cpu: 99m
             memory: 100Mi
         ports:
         - containerPort: 80
-        env:
-        - name: ZIPKIN
-          value: http://zipkin:9411/api/v1/spans
         securityContext:
           runAsNonRoot: true
           runAsUser: 10001
@@ -49,3 +46,5 @@ spec:
             port: 80
           initialDelaySeconds: 180
           periodSeconds: 3
+      nodeSelector:
+        beta.kubernetes.io/os: linux

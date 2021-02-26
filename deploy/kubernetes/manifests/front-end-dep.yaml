@@ -13,16 +13,19 @@ spec:
     spec:
       containers:
       - name: front-end
-        image: weaveworksdemos/front-end:0.3.1
+        image: weaveworksdemos/front-end:0.3.12
         resources:
           limits:
             cpu: 300m
-            memory: 300Mi
+            memory: 1000Mi
           requests:
             cpu: 100m
-            memory: 100Mi
+            memory: 300Mi
         ports:
         - containerPort: 8079
+        env:
+        - name: SESSION_REDIS
+          value: "true"
         securityContext:
           runAsNonRoot: true
           runAsUser: 10001
@@ -42,3 +45,5 @@ spec:
             port: 8079
           initialDelaySeconds: 30
           periodSeconds: 3
+      nodeSelector:
+        beta.kubernetes.io/os: linux

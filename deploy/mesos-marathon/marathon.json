@@ -29,7 +29,7 @@
           "container": {
             "type": "DOCKER",
             "docker": {
-              "image": "rabbitmq:3",
+              "image": "rabbitmq:3.6.8",
               "network": "BRIDGE",
               "parameters": [
                 {
@@ -41,7 +41,7 @@
           }
         },
         {
-          "id": "/weave-demo/database/cart-db",
+          "id": "/weave-demo/database/carts-db",
           "cpus": 0.1,
           "mem": 1024.0,
           "container": {
@@ -52,7 +52,7 @@
               "parameters": [
                 {
                   "key": "hostname",
-                  "value": "cart-db.weave.local"
+                  "value": "carts-db.weave.local"
                 }
               ]
             }
@@ -125,21 +125,24 @@
           }
         },
         {
-          "id": "/weave-demo/service/cart",
+          "id": "/weave-demo/service/carts",
           "cpus": 0.5,
           "mem": 1024.0,
           "container": {
             "type": "DOCKER",
             "docker": {
-              "image": "weaveworksdemos/cart:latest",
+              "image": "weaveworksdemos/carts:latest",
               "network": "BRIDGE",
               "parameters": [
                 {
                   "key": "hostname",
-                  "value": "cart.weave.local"
+                  "value": "carts.weave.local"
                 }
               ]
             }
+          },
+          "env": {
+            "JAVA_OPTS": "-Xms64m -Xmx128m -XX:PermSize=32m -XX:MaxPermSize=64m -XX:+UseG1GC -Djava.security.egd=file:/dev/urandom"
           }
         },
         {
@@ -158,6 +161,9 @@
                 }
               ]
             }
+          },
+          "env": {
+            "JAVA_OPTS": "-Xms64m -Xmx128m -XX:PermSize=32m -XX:MaxPermSize=64m -XX:+UseG1GC -Djava.security.egd=file:/dev/urandom"
           }
         },
         {
@@ -194,6 +200,9 @@
                 }
               ]
             }
+          },
+          "env": {
+            "JAVA_OPTS": "-Xms64m -Xmx128m -XX:PermSize=32m -XX:MaxPermSize=64m -XX:+UseG1GC -Djava.security.egd=file:/dev/urandom"
           }
         },
         {

@@ -15,21 +15,19 @@ spec:
     spec:
       containers:
       - name: user
-        image: weaveworksdemos/user:0.4.0
+        image: weaveworksdemos/user:0.4.7
         resources:
           limits:
             cpu: 300m
-            memory: 300Mi
+            memory: 100Mi
           requests:
             cpu: 100m
             memory: 100Mi
         ports:
         - containerPort: 80
         env:
-        - name: MONGO_HOST
+        - name: mongo
           value: user-db:27017
-        - name: ZIPKIN
-          value: http://zipkin:9411/api/v1/spans
         securityContext:
           runAsNonRoot: true
           runAsUser: 10001
@@ -51,3 +49,5 @@ spec:
             port: 80
           initialDelaySeconds: 180
           periodSeconds: 3
+      nodeSelector:
+        beta.kubernetes.io/os: linux
